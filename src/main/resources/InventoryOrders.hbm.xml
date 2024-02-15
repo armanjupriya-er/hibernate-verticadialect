@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "C:\Users\bilal.a\Downloads\hibernate-mapping-3.0.dtd"><hibernate-mapping>
+    <class name="model.InventoryOrders" table="inventory_orders">
+        <id name="item_id" type="float">
+            <column name="item_id" />
+            <generator class="native" />
+        </id>
+        
+        <property name="units_received" type="float">
+            <column name="units_received" />
+        </property>
+
+        <!-- Many-to-one association with Item -->
+        <bag name="items" inverse="true" cascade="all,delete-orphan">
+            <key column="item_nbr"/>
+            <one-to-many class="model.Item"/>
+        </bag>
+    </class>
+</hibernate-mapping>
