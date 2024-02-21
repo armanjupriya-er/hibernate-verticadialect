@@ -2,7 +2,7 @@
 <!DOCTYPE hibernate-configuration PUBLIC
 "-//Hibernate/Hibernate 
 Configuration DTD 3.0//EN"
-    "C:\Users\bilal.a\Downloads\hibernate-configuration-3.0.dtd">
+    "hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
 <session-factory>
 <property 
@@ -10,14 +10,17 @@ name="hibernate.connection.driver_class">com.vertica.jdbc.Driver</property>
 <property 
 name="hibernate.connection.password">1234</property>
 <property 
-name="hibernate.connection.url">jdbc:vertica://159.65.145.184:5433/vmart</property>
+name="hibernate.connection.url">jdbc:vertica://159.65.145.184:5433/dbadmin</property>
 <property 
 name="hibernate.connection.username">dbadmin</property>
 <property
-name="hibernate.dialect">org.hibernate.dialect.VerticaDialect</property> 
+name="hibernate.dialect">com.hibernatewithvertica.hibernateWithVerticaDB.VerticaDialect</property> 
 <property name="hbm2ddl.auto">create</property>
 <property name="show_sql">true</property>
-<mapping resource="Item.hbm.xml"></mapping>
-<mapping resource="InventoryOrders.hbm.xml"/>
+<mapping resource ="InventoryOrders.hbm.xml"></mapping>
+
+<mapping resource ="Item.hbm.xml"></mapping>
+
+
 </session-factory>
 </hibernate-configuration>

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC 
     "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-    "C:\Users\bilal.a\Downloads\hibernate-mapping-3.0.dtd"><hibernate-mapping>
+    "hibernate-mapping-3.0.dtd"><hibernate-mapping>
     <class name="model.InventoryOrders" table="inventory_orders">
         <id name="item_id" type="float">
             <column name="item_id" />
