@@ -122,10 +122,22 @@ public class VerticaDialect extends Dialect {
 			return "numeric($p,$s)";
 		case Types.DATE:
 			return "date";
+			
 		case Types.TIME:
 			return "time";
 		case Types.TIMESTAMP:
 			return "timestamp";
+		case Types.BINARY:
+			return "binary"; 
+		case Types.LONGVARBINARY:
+			return "LongVarBinary";
+		case Types.LONGVARCHAR:
+			return "LongVarchar";
+		case Types.TIME_WITH_TIMEZONE:
+			return "TimeTz";
+		case Types.TIMESTAMP_WITH_TIMEZONE:
+			return "TimestampTz";
+		
 		case Types.OTHER:
 			return "varchar($l)";
 		case Types.BIT:
@@ -366,7 +378,13 @@ public class VerticaDialect extends Dialect {
 		functionFactory.coalesce();
 		functionFactory.log();
 		functionFactory.addMonths();
+		functionFactory.ceiling_ceil();
 		functionFactory.monthsBetween();
+		functionFactory.char_chr();
+		functionFactory.initcap();
+		functionFactory.lowerUpper();
+		functionFactory.trim2();
+		functionFactory.substr();
 
 		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
@@ -509,6 +527,12 @@ public class VerticaDialect extends Dialect {
 		// would need multiple statements to 'set not null'/'drop not null', 'set default'/'drop default', 'set generated', etc
 		return "alter column " + columnName + " set data type " + columnType;
 	}
+	@Override
+	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
+		// TODO: adapt this to handle named enum types!
+		// Workaround for postgres bug #1453
+		return "null::" + typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType ).getRawTypeName();
+	}
 //    @Override
 //    public String getDropSequenceString( String sequenceName )
 //    {
@@ -538,12 +562,16 @@ public class VerticaDialect extends Dialect {
 //    {
 //        return SequenceGenerator.class;
 //    }
-	@Override
-	public SequenceSupport getSequenceSupport() {
-		System.out.println("Sequence");
-		return PostgreSQLSequenceSupport.INSTANCE;
-	}
+//	@Override
+//	public SequenceSupport getSequenceSupport() {
+//		System.out.println("Sequence");
+//		return PostgreSQLSequenceSupport.INSTANCE;
+//	}
 
+	@Override
+	public String getNativeIdentifierGeneratorStrategy() {
+		return "sequence";
+	}
 
 	@Override
 	public String getNoColumnsInsertString() {
@@ -551,11 +579,11 @@ public class VerticaDialect extends Dialect {
 		return "default values";
 	}
 
-	@Override
-	public String getQuerySequencesString() {
-		System.out.println("299");
-		return "select sequence_name from sequences";
-	}
+//	@Override
+//	public String getQuerySequencesString() {
+//		System.out.println("299");
+//		return "select sequence_name from sequences";
+//	}
 
 //    @Override
 //    public String getSelectSequenceNextValString( String sequenceName )
@@ -660,5 +688,36 @@ public class VerticaDialect extends Dialect {
 		System.out.println("403");
 		return false;
 	}
+//	public class VerticaDialectSupport implements SequenceSupport {
+//
+//	    @Override
+//	    public String getSelectSequenceNextValString(String sequenceName) {
+//	        return "SELECT NEXTVAL('" + sequenceName + "')";
+//	    }
+//
+//	    @Override
+//	    public String getSelectSequencePreviousValString(String sequenceName) {
+//	        return "SELECT PREVVAL('" + sequenceName + "')";
+//	    }
+//
+//	    @Override
+//	    public boolean sometimesNeedsStartingValue() {
+//	        // Handle any cases where a starting value is required for sequence operations
+//	        return true;
+//	    }
+//
+//	    @Override
+//	    public String getDropSequenceString(String sequenceName) {
+//	        return "DROP SEQUENCE IF EXISTS " + sequenceName;
+//	    }
+//
+//	    @Override
+//	    public String getCreateSequenceString(String sequenceName) {
+//	        return "CREATE SEQUENCE " + sequenceName;
+//	    }
+//	}
 
 }
+
+
+	
