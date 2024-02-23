@@ -1,4 +1,4 @@
-package com.hibernatewithvertica.hibernateWithVerticaDB;
+package org.hibernate.dialect;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -15,11 +15,11 @@ public class HibernateWithVerticaDbApplication {
 
 	public static void main(String[] args) {   
 //    	String createSchemaSQL = "CREATE SCHEMA IF NOT EXISTS vertica_db";
-    	System.out.println("hello");
+//    	System.out.println("hello");
     	Configuration configuration = new Configuration().configure("hibernate.cfg.xml");
 //    	 Connection connection = DriverManager.getConnection(url, username, password);
 //    	Statement statement = connection.createStatement()
-    	System.out.println("in 14");
+//    	System.out.println("in 14");
     	SessionFactory sessionFactory = configuration.buildSessionFactory();
     	Session session = sessionFactory.openSession();
     	session.beginTransaction();

@@ -1,4 +1,4 @@
-package com.hibernatewithvertica.hibernateWithVerticaDB;
+package org.hibernate.dialect;
 
 
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
@@ -350,7 +350,7 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		System.out.println("130");
+//		System.out.println("130");
 		super.initializeFunctionRegistry(functionContributions);
 		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 		TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
@@ -501,13 +501,13 @@ public class VerticaDialect extends Dialect {
 	}
 	@Override
 	public boolean dropConstraints() {
-		System.out.println("227");
+//		System.out.println("227");
 		return false;
 	}
 
 	@Override
 	public String getAddColumnString() {
-		System.out.println("233");
+//		System.out.println("233");
 		return "add column";
 	}
 
@@ -519,7 +519,7 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		System.out.println("251");
+//		System.out.println("251");
 		return "select now()";
 	}
 	@Override
@@ -541,7 +541,7 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(String aliases) {
-		System.out.println("263");
+//		System.out.println("263");
 		return getForUpdateString() + " of " + aliases;
 	}
 
@@ -575,7 +575,7 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public String getNoColumnsInsertString() {
-		System.out.println("292");
+//		System.out.println("292");
 		return "default values";
 	}
 
@@ -605,19 +605,19 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public boolean isCurrentTimestampSelectStringCallable() {
-		System.out.println("323");
+//		System.out.println("323");
 		return false;
 	}
 
 	@Override
 	public boolean supportsCommentOn() {
-		System.out.println("329");
+//		System.out.println("329");
 		return true;
 	}
 
 	@Override
 	public boolean supportsCurrentTimestampSelection() {
-		System.out.println("335");
+//		System.out.println("335");
 		return true;
 	}
 
@@ -661,31 +661,31 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public boolean supportsTupleDistinctCounts() {
-		System.out.println("379");
+//		System.out.println("379");
 		return false;
 	}
 
 	@Override
 	public boolean supportsUnboundedLobLocatorMaterialization() {
-		System.out.println("385");
+//		System.out.println("385");
 		return false;
 	}
 
 	@Override
 	public boolean supportsUnionAll() {
-		System.out.println("390");
+//		System.out.println("390");
 		return true;
 	}
 
 	@Override
 	public String toBooleanValueString(boolean bool) {
-		System.out.println("397");
+//		System.out.println("397");
 		return bool ? "true" : "false";
 	}
 
 	@Override
 	public boolean useInputStreamToInsertBlob() {
-		System.out.println("403");
+//		System.out.println("403");
 		return false;
 	}
 //	public class VerticaDialectSupport implements SequenceSupport {

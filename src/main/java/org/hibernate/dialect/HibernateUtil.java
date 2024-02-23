@@ -1,4 +1,4 @@
-package com.hibernatewithvertica.hibernateWithVerticaDB;
+package org.hibernate.dialect;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
