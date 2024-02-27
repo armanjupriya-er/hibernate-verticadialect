@@ -6,7 +6,7 @@
     <class name="com.vertica.model.dataTypes" table="data_types_table">
             <id name="id" type="long">
             <column name="id" length="36" />
-            <generator class="increment" />
+            <generator class="sequence" />
         </id>
       <property name="binaryData" type="binary">
             <column name="binaryData" />
@@ -39,9 +39,16 @@
                   <!-- <property name="timeWithTimezone" type="offsetTimeAsTimeSpan">
             <column name="timeWithTimezone" />
         </property> -->
+        <property name="timeWithTimeZone" type="java.time.OffsetTime">
+    <column name="timeWithTimeZone" />
+</property>
+<property name="timestampWithTimezone" type="java.time.OffsetDateTime">
+    <column name="timestampWithTimezone"/>
+</property>
         <property name="timeStamp" type="timestamp">
             <column name="timeStamp" />
         </property>
+        
     <!--     <property name="timeStampWithTimeZone" type="offsetTimeAsTimeSpan">
             <column name="timeStampWithTimeZone" />
         </property> -->

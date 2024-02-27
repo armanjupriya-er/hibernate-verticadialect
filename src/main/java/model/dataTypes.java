@@ -7,6 +7,7 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.Period;
 import java.util.UUID;
@@ -25,6 +26,8 @@ public class dataTypes {
 //	 private OffsetTime timeWithTimezone;
 	 private Timestamp timeStamp;
 //	 private OffsetTime timeStampWithTimeZone;
+	 private OffsetTime timeWithTimeZone;
+	 private OffsetDateTime timestampWithTimezone;
 //	 private Duration interval;
 	 private Duration intervalDaytosec;
 //	 private Period intervalYearToMonth;
@@ -40,6 +43,7 @@ public class dataTypes {
 	 private short smallIntValue;
 //	 private byte tinyintValue;
 	 private BigDecimal decimalValue;
+
 //	 private BigDecimal numericValue;
 //	 private BigInteger numberValue;
 //	 private BigDecimal moneyValue;
@@ -152,7 +156,15 @@ public class dataTypes {
 	public void setFloatValue(float floatValue) {
 		this.floatValue = floatValue;
 	}
-//	public float getFloatn() {
+	
+
+	public OffsetTime getTimeWithTimeZone() {
+		return timeWithTimeZone;
+	}
+	public void setTimeWithTimeZone(OffsetTime timeWithTimeZone) {
+		this.timeWithTimeZone = timeWithTimeZone;
+	}
+	//	public float getFloatn() {
 //		return floatn;
 //	}
 //	public void setFloatn(float floatn) {
@@ -236,6 +248,13 @@ public class dataTypes {
 //	public void setGeographicValue(Point geographicValue) {
 //		this.geographicValue = geographicValue;
 //	}
+	public OffsetDateTime getTimestampWithTimezone() {
+		return timestampWithTimezone;
+	}
+	public void setTimestampWithTimezone(OffsetDateTime timestampWithTimezone) {
+		this.timestampWithTimezone = timestampWithTimezone;
+	}
+
 	
 
 	

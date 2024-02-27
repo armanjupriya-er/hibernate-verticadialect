@@ -5,7 +5,9 @@ import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOGRAPHY;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
@@ -15,6 +17,7 @@ import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.SQLXML;
@@ -22,7 +25,9 @@ import static org.hibernate.type.SqlTypes.STRUCT;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TIME_UTC;
+import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
@@ -39,20 +44,17 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import org.hibernate.MappingException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.OracleServerConfiguration;
-import org.hibernate.dialect.PostgreSQLDriverKind;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.ModeStatsModeEmulation;
 import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -109,7 +111,7 @@ public class VerticaDialect extends Dialect {
 			return "varchar2($l)";
 		case Types.BIGINT:
 		case Types.SMALLINT:
-		case Types.TINYINT:
+//		case Types.TINYINT:
 		case Types.INTEGER:
 			return "int";
 		case Types.FLOAT:
@@ -127,8 +129,8 @@ public class VerticaDialect extends Dialect {
 			return "time";
 		case Types.TIMESTAMP:
 			return "timestamp";
-		case Types.BINARY:
-			return "binary"; 
+//		case Types.BINARY:
+//			return "binary"; 
 		case Types.LONGVARBINARY:
 			return "LongVarBinary";
 		case Types.LONGVARCHAR:
@@ -142,6 +144,46 @@ public class VerticaDialect extends Dialect {
 			return "varchar($l)";
 		case Types.BIT:
 			return "bool";
+		case TINYINT:
+			// no tinyint, not even in Postgres 11
+			return "smallint";
+
+		// there are no nchar/nvarchar types in Postgres
+		case NCHAR:
+			return columnType( CHAR );
+		case NVARCHAR:
+			return columnType( VARCHAR );
+	
+
+		// since there's no real difference between TEXT and VARCHAR,
+		// except for the length limit, we can just use 'text' for the
+		// "long" string types
+		case LONG32VARCHAR:
+		case LONG32NVARCHAR:
+			return "text";
+
+		case BLOB:
+		case CLOB:
+		case NCLOB:
+			// use oid as the blob/clob type on Postgres because
+			// the JDBC driver doesn't allow using bytea/text via
+			// LOB APIs
+			return "oid";
+
+		// use bytea as the "long" binary type (that there is no
+		// real VARBINARY type in Postgres, so we always use this)
+		case BINARY:
+		case VARBINARY:
+		case LONG32VARBINARY:
+			return "bytea";
+
+		// We do not use the time with timezone type because PG deprecated it and it lacks certain operations like subtraction
+//		case TIME_UTC:
+//			return columnType( TIME_WITH_TIMEZONE );
+
+		case TIMESTAMP_UTC:
+			return columnType( TIMESTAMP_WITH_TIMEZONE );
+
 		default:
 			return super.columnType(sqlTypeCode);
 		}
@@ -163,25 +205,6 @@ public class VerticaDialect extends Dialect {
 				return "bytea";
 		}
 		return super.castType( sqlTypeCode );
-	}
-	@Override
-	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
-		switch ( columnTypeName ) {
-			case "bool":
-				return Types.BOOLEAN;
-			case "float4":
-				// Use REAL instead of FLOAT to get Float as recommended Java type
-				return Types.REAL;
-			case "float8":
-				return Types.DOUBLE;
-			case "int2":
-				return Types.SMALLINT;
-			case "int4":
-				return Types.INTEGER;
-			case "int8":
-				return Types.BIGINT;
-		}
-		return super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
 	}
 	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
@@ -213,6 +236,94 @@ public class VerticaDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
 	}
+	@Override
+	public JdbcType resolveSqlTypeDescriptor(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			JdbcTypeRegistry jdbcTypeRegistry) {
+		switch ( jdbcTypeCode ) {
+			case OTHER:
+				switch ( columnTypeName ) {
+					case "uuid":
+						jdbcTypeCode = UUID;
+						break;
+					case "json":
+					case "jsonb":
+						jdbcTypeCode = JSON;
+						break;
+					case "xml":
+						jdbcTypeCode = SQLXML;
+						break;
+					case "inet":
+						jdbcTypeCode = INET;
+						break;
+					case "geometry":
+						jdbcTypeCode = GEOMETRY;
+						break;
+					case "geography":
+						jdbcTypeCode = GEOGRAPHY;
+						break;
+				}
+				break;
+			case TIME:
+				// The PostgreSQL JDBC driver reports TIME for timetz, but we use it only for mapping OffsetTime to UTC
+				if ( "timetz".equals( columnTypeName ) ) {
+					jdbcTypeCode = TIME_UTC;
+				}
+				break;
+			case TIMESTAMP:
+				// The PostgreSQL JDBC driver reports TIMESTAMP for timestamptz, but we use it only for mapping Instant
+				if ( "timestamptz".equals( columnTypeName ) ) {
+					jdbcTypeCode = TIMESTAMP_UTC;
+				}
+				break;
+			case ARRAY:
+				final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
+				// PostgreSQL names array types by prepending an underscore to the base name
+				if ( jdbcTypeConstructor != null && columnTypeName.charAt( 0 ) == '_' ) {
+					final String componentTypeName = columnTypeName.substring( 1 );
+					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
+					if ( sqlTypeCode != null ) {
+						return jdbcTypeConstructor.resolveType(
+								jdbcTypeRegistry.getTypeConfiguration(),
+								this,
+								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
+								ColumnTypeInformation.EMPTY
+						);
+					}
+				}
+				break;
+			case STRUCT:
+				final AggregateJdbcType aggregateDescriptor = jdbcTypeRegistry.findAggregateDescriptor( columnTypeName );
+				if ( aggregateDescriptor != null ) {
+					return aggregateDescriptor;
+				}
+				break;
+		}
+		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+	}
+	@Override
+	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
+		switch ( columnTypeName ) {
+			case "bool":
+				return Types.BOOLEAN;
+			case "float4":
+				// Use REAL instead of FLOAT to get Float as recommended Java type
+				return Types.REAL;
+			case "float8":
+				return Types.DOUBLE;
+			case "int2":
+				return Types.SMALLINT;
+			case "int4":
+				return Types.INTEGER;
+			case "int8":
+				return Types.BIGINT;
+		}
+		return super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
+	}
+	
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
@@ -350,7 +461,7 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-//		System.out.println("130");
+		System.out.println("130");
 		super.initializeFunctionRegistry(functionContributions);
 		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 		TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
@@ -367,7 +478,7 @@ public class VerticaDialect extends Dialect {
 		functionFactory.toCharNumberDateTimestamp();
 		functionFactory.nowCurdateCurtime();
 		functionFactory.lastDay();
-		functionFactory.sysdate();
+//		functionFactory.sysdate();
 		functionFactory.concat();
 		functionFactory.instr();
 		functionFactory.replace();
@@ -430,84 +541,88 @@ public class VerticaDialect extends Dialect {
 		functionFactory.arrayFill_oracle();
 		functionFactory.arrayToString_oracle();
 	}
-	
-	@Override
-	public JdbcType resolveSqlTypeDescriptor(
-			String columnTypeName,
-			int jdbcTypeCode,
-			int precision,
-			int scale,
-			JdbcTypeRegistry jdbcTypeRegistry) {
-		switch ( jdbcTypeCode ) {
-			case OTHER:
-				switch ( columnTypeName ) {
-					case "uuid":
-						jdbcTypeCode = UUID;
-						break;
-					case "json":
-					case "jsonb":
-						jdbcTypeCode = JSON;
-						break;
-					case "xml":
-						jdbcTypeCode = SQLXML;
-						break;
-					case "inet":
-						jdbcTypeCode = INET;
-						break;
-					case "geometry":
-						jdbcTypeCode = GEOMETRY;
-						break;
-					case "geography":
-						jdbcTypeCode = GEOGRAPHY;
-						break;
-				}
-				break;
-			case TIME:
-				// The PostgreSQL JDBC driver reports TIME for timetz, but we use it only for mapping OffsetTime to UTC
-				if ( "timetz".equals( columnTypeName ) ) {
-					jdbcTypeCode = TIME_UTC;
-				}
-				break;
-			case TIMESTAMP:
-				// The PostgreSQL JDBC driver reports TIMESTAMP for timestamptz, but we use it only for mapping Instant
-				if ( "timestamptz".equals( columnTypeName ) ) {
-					jdbcTypeCode = TIMESTAMP_UTC;
-				}
-				break;
-			case ARRAY:
-				final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
-				// PostgreSQL names array types by prepending an underscore to the base name
-				if ( jdbcTypeConstructor != null && columnTypeName.charAt( 0 ) == '_' ) {
-					final String componentTypeName = columnTypeName.substring( 1 );
-					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
-					if ( sqlTypeCode != null ) {
-						return jdbcTypeConstructor.resolveType(
-								jdbcTypeRegistry.getTypeConfiguration(),
-								this,
-								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
-								ColumnTypeInformation.EMPTY
-						);
-					}
-				}
-				break;
-			case STRUCT:
-				final AggregateJdbcType aggregateDescriptor = jdbcTypeRegistry.findAggregateDescriptor( columnTypeName );
-				if ( aggregateDescriptor != null ) {
-					return aggregateDescriptor;
-				}
-				break;
-		}
-		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+	protected boolean supportsMinMaxOnUuid() {
+		return false;
 	}
+
+	@Override
+	public NameQualifierSupport getNameQualifierSupport() {
+		// This method is overridden so the correct value will be returned when
+		// DatabaseMetaData is not available.
+		return NameQualifierSupport.SCHEMA;
+	}
+
+	@Override
+	public String getCurrentSchemaCommand() {
+		return "select current_schema()";
+	}
+
+	@Override
+	public boolean supportsDistinctFromPredicate() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTableName() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTypeName() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeConstraintName() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsIfExistsAfterAlterTable() {
+		return true;
+	}
+
+	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		// would need multiple statements to 'set not null'/'drop not null', 'set default'/'drop default', 'set generated', etc
+		return "alter column " + columnName + " set data type " + columnType;
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsValuesList() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsPartitionBy() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsNonQueryWithCTE() {
+		return true;
+	}
+
+	@Override
+	public SequenceSupport getSequenceSupport() {
+		return VerticaSequenceSupport.INSTANCE;
+	}
+
+
 	@Override
 	public boolean dropConstraints() {
-//		System.out.println("227");
+		System.out.println("227");
 		return false;
 	}
 
 	@Override
 	public String getAddColumnString() {
-//		System.out.println("233");
+		System.out.println("233");
 		return "add column";
 	}
 
@@ -519,14 +634,10 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-//		System.out.println("251");
+		System.out.println("251");
 		return "select now()";
 	}
-	@Override
-	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
-		// would need multiple statements to 'set not null'/'drop not null', 'set default'/'drop default', 'set generated', etc
-		return "alter column " + columnName + " set data type " + columnType;
-	}
+
 	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		// TODO: adapt this to handle named enum types!
@@ -541,7 +652,7 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(String aliases) {
-//		System.out.println("263");
+		System.out.println("263");
 		return getForUpdateString() + " of " + aliases;
 	}
 
@@ -575,7 +686,7 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public String getNoColumnsInsertString() {
-//		System.out.println("292");
+		System.out.println("292");
 		return "default values";
 	}
 
@@ -605,19 +716,19 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public boolean isCurrentTimestampSelectStringCallable() {
-//		System.out.println("323");
+		System.out.println("323");
 		return false;
 	}
 
 	@Override
 	public boolean supportsCommentOn() {
-//		System.out.println("329");
+		System.out.println("329");
 		return true;
 	}
 
 	@Override
 	public boolean supportsCurrentTimestampSelection() {
-//		System.out.println("335");
+		System.out.println("335");
 		return true;
 	}
 
@@ -661,33 +772,41 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public boolean supportsTupleDistinctCounts() {
-//		System.out.println("379");
+		System.out.println("379");
 		return false;
 	}
 
 	@Override
 	public boolean supportsUnboundedLobLocatorMaterialization() {
-//		System.out.println("385");
+		System.out.println("385");
 		return false;
 	}
 
 	@Override
 	public boolean supportsUnionAll() {
-//		System.out.println("390");
+		System.out.println("390");
 		return true;
 	}
 
 	@Override
 	public String toBooleanValueString(boolean bool) {
-//		System.out.println("397");
+		System.out.println("397");
 		return bool ? "true" : "false";
 	}
 
 	@Override
 	public boolean useInputStreamToInsertBlob() {
-//		System.out.println("403");
+		System.out.println("403");
 		return false;
 	}
+	
+	public String getAlterTableString(String tableName) {
+		final StringBuilder sb = new StringBuilder( "alter table " );
+		sb.append( tableName );
+		return sb.toString();
+	}
+}
+	
 //	public class VerticaDialectSupport implements SequenceSupport {
 //
 //	    @Override
@@ -717,6 +836,82 @@ public class VerticaDialect extends Dialect {
 //	    }
 //	}
 
+
+class VerticaSequenceSupport implements SequenceSupport {
+	
+	public static final SequenceSupport INSTANCE = new VerticaSequenceSupport();
+	@Override
+	public boolean supportsSequences() {
+		return true;
+	}
+	@Override
+	public boolean supportsPooledSequences() {
+		return supportsSequences();
+	}
+	@Override
+	public String getSelectSequenceNextValString(String sequenceName) {
+		return "nextval('" + sequenceName + "')";
+	}
+	@Override
+	public String getSelectSequencePreviousValString(String sequenceName) throws MappingException {
+		throw new UnsupportedOperationException( "No support for retrieving previous value" );
+	}
+	@Override
+	public String getSequenceNextValString(String sequenceName) throws MappingException {
+		return "select " + getSelectSequenceNextValString( sequenceName ) + getFromDual();
+	}
+@Override
+	public String getSequenceNextValString(String sequenceName, int increment) throws MappingException {
+		return getSequenceNextValString( sequenceName );
+	}
+@Override
+public String[] getCreateSequenceStrings(String sequenceName, int initialValue, int incrementSize) throws MappingException {
+	return new String[] { getCreateSequenceString( sequenceName, initialValue, incrementSize ) };
+}
+@Override
+public String getCreateSequenceString(String sequenceName) throws MappingException {
+	return "create sequence " + sequenceName;
+}
+@Override
+public String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) throws MappingException {
+	if ( incrementSize == 0 ) {
+		throw new MappingException( "Unable to create the sequence [" + sequenceName + "]: the increment size must not be 0" );
+	}
+	return getCreateSequenceString( sequenceName )
+			+ startingValue( initialValue, incrementSize )
+			+ " start with " + initialValue
+			+ " increment by " + incrementSize;
+}
+@Override
+public String[] getDropSequenceStrings(String sequenceName) throws MappingException {
+	return new String[]{ getDropSequenceString( sequenceName ) };
+}
+
+
+
+	
+	@Override
+	public boolean sometimesNeedsStartingValue() {
+		return true;
+	}
+	
+	@Override
+	public String getDropSequenceString(String sequenceName) {
+		return "drop sequence if exists " + sequenceName;
+	}
+	@Override
+	public String startingValue(int initialValue, int incrementSize) {
+		if ( sometimesNeedsStartingValue() ) {
+			if (incrementSize > 0 && initialValue <= 0) {
+				return " minvalue " + initialValue;
+			}
+			if (incrementSize < 0 && initialValue >= 0) {
+				return " maxvalue " + initialValue;
+			}
+		}
+		return "";
+	}
+	
 }
 
 
