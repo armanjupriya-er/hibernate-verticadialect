@@ -1,6 +1,7 @@
 package org.hibernate.dialect;
 
 
+
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
 import static org.hibernate.type.SqlTypes.ARRAY;
@@ -75,6 +76,16 @@ import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.UserType;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.OffsetTime;
+
+import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import jakarta.persistence.TemporalType;
 
@@ -93,6 +104,7 @@ public class VerticaDialect extends Dialect {
 	
 	public VerticaDialect(DatabaseVersion version) {
 		super(version);
+
 
 	}
 
@@ -265,8 +277,11 @@ public class VerticaDialect extends Dialect {
 					case "geography":
 						jdbcTypeCode = GEOGRAPHY;
 						break;
+						
 				}
 				break;
+			
+				
 			case TIME:
 				// The PostgreSQL JDBC driver reports TIME for timetz, but we use it only for mapping OffsetTime to UTC
 				if ( "timetz".equals( columnTypeName ) ) {
@@ -874,13 +889,14 @@ public String getCreateSequenceString(String sequenceName) throws MappingExcepti
 }
 @Override
 public String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) throws MappingException {
+	int increment=1;
 	if ( incrementSize == 0 ) {
 		throw new MappingException( "Unable to create the sequence [" + sequenceName + "]: the increment size must not be 0" );
 	}
 	return getCreateSequenceString( sequenceName )
 			+ startingValue( initialValue, incrementSize )
 			+ " start with " + initialValue
-			+ " increment by " + incrementSize;
+			+ " increment by " + increment;
 }
 @Override
 public String[] getDropSequenceStrings(String sequenceName) throws MappingException {
@@ -912,7 +928,5 @@ public String[] getDropSequenceStrings(String sequenceName) throws MappingExcept
 		return "";
 	}
 	
-}
-
-
 	
+}
