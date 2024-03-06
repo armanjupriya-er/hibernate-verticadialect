@@ -53,7 +53,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.ModeStatsModeEmulation;
 import org.hibernate.dialect.function.OracleTruncFunction;
-import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.query.SemanticException;
@@ -157,10 +156,9 @@ public class VerticaDialect extends Dialect {
 		case Types.BIT:
 			return "bool";
 		case TINYINT:
-			// no tinyint, not even in Postgres 11
 			return "smallint";
 
-		// there are no nchar/nvarchar types in Postgres
+		// there are no nchar/nvarchar types in varchar
 		case NCHAR:
 			return columnType( CHAR );
 		case NVARCHAR:
@@ -177,19 +175,19 @@ public class VerticaDialect extends Dialect {
 		case BLOB:
 		case CLOB:
 		case NCLOB:
-			// use oid as the blob/clob type on Postgres because
+			// use oid as the blob/clob type on vertica because
 			// the JDBC driver doesn't allow using bytea/text via
 			// LOB APIs
 			return "oid";
 
 		// use bytea as the "long" binary type (that there is no
-		// real VARBINARY type in Postgres, so we always use this)
+		// real VARBINARY type in vertica, so we always use this)
 		case BINARY:
 		case VARBINARY:
 		case LONG32VARBINARY:
 			return "bytea";
 
-		// We do not use the time with timezone type because PG deprecated it and it lacks certain operations like subtraction
+		// We do not use the time with timezone type because vertica deprecated it and it lacks certain operations like subtraction
 //		case TIME_UTC:
 //			return columnType( TIME_WITH_TIMEZONE );
 
@@ -283,20 +281,20 @@ public class VerticaDialect extends Dialect {
 			
 				
 			case TIME:
-				// The PostgreSQL JDBC driver reports TIME for timetz, but we use it only for mapping OffsetTime to UTC
+				// The vertica JDBC driver reports TIME for timetz, but we use it only for mapping OffsetTime to UTC
 				if ( "timetz".equals( columnTypeName ) ) {
 					jdbcTypeCode = TIME_UTC;
 				}
 				break;
 			case TIMESTAMP:
-				// The PostgreSQL JDBC driver reports TIMESTAMP for timestamptz, but we use it only for mapping Instant
+				// The vertica JDBC driver reports TIMESTAMP for timestamptz, but we use it only for mapping Instant
 				if ( "timestamptz".equals( columnTypeName ) ) {
 					jdbcTypeCode = TIMESTAMP_UTC;
 				}
 				break;
 			case ARRAY:
 				final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
-				// PostgreSQL names array types by prepending an underscore to the base name
+				// vertica names array types by prepending an underscore to the base name
 				if ( jdbcTypeConstructor != null && columnTypeName.charAt( 0 ) == '_' ) {
 					final String componentTypeName = columnTypeName.substring( 1 );
 					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
@@ -476,7 +474,6 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		System.out.println("130");
 		super.initializeFunctionRegistry(functionContributions);
 		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 		TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
@@ -493,7 +490,7 @@ public class VerticaDialect extends Dialect {
 		functionFactory.toCharNumberDateTimestamp();
 		functionFactory.nowCurdateCurtime();
 		functionFactory.lastDay();
-//		functionFactory.sysdate();
+		functionFactory.sysdate();
 		functionFactory.concat();
 		functionFactory.instr();
 		functionFactory.replace();
@@ -525,7 +522,6 @@ public class VerticaDialect extends Dialect {
 		functionFactory.windowFunctions();
 		functionFactory.hypotheticalOrderedSetAggregates();
 		functionFactory.inverseDistributionOrderedSetAggregates();
-		// Oracle has a regular aggregate function named stats_mode
 		functionContributions.getFunctionRegistry().register(
 				"mode",
 				new ModeStatsModeEmulation( typeConfiguration )
@@ -597,11 +593,11 @@ public class VerticaDialect extends Dialect {
 		return true;
 	}
 
-	@Override
-	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
-		// would need multiple statements to 'set not null'/'drop not null', 'set default'/'drop default', 'set generated', etc
-		return "alter column " + columnName + " set data type " + columnType;
-	}
+//	@Override
+//	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+//		// would need multiple statements to 'set not null'/'drop not null', 'set default'/'drop default', 'set generated', etc
+//		return "alter column " + columnName + " set data type " + columnType;
+//	}
 
 	@Override
 	public boolean supportsAlterColumnType() {
@@ -631,32 +627,28 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public boolean dropConstraints() {
-		System.out.println("227");
 		return false;
 	}
 
 	@Override
 	public String getAddColumnString() {
-		System.out.println("233");
 		return "add column";
 	}
 
 	@Override
 	public String getCascadeConstraintsString() {
-		System.out.println("239");
 		return " cascade";
 	}
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		System.out.println("251");
 		return "select now()";
 	}
 
 	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		// TODO: adapt this to handle named enum types!
-		// Workaround for postgres bug #1453
+		// Workaround for vertica bug #1453
 		return "null::" + typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType ).getRawTypeName();
 	}
 //    @Override
@@ -667,7 +659,6 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(String aliases) {
-		System.out.println("263");
 		return getForUpdateString() + " of " + aliases;
 	}
 
@@ -701,7 +692,6 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public String getNoColumnsInsertString() {
-		System.out.println("292");
 		return "default values";
 	}
 
@@ -731,19 +721,16 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public boolean isCurrentTimestampSelectStringCallable() {
-		System.out.println("323");
 		return false;
 	}
 
 	@Override
 	public boolean supportsCommentOn() {
-		System.out.println("329");
 		return true;
 	}
 
 	@Override
 	public boolean supportsCurrentTimestampSelection() {
-		System.out.println("335");
 		return true;
 	}
 
@@ -787,31 +774,26 @@ public class VerticaDialect extends Dialect {
 
 	@Override
 	public boolean supportsTupleDistinctCounts() {
-		System.out.println("379");
 		return false;
 	}
 
 	@Override
 	public boolean supportsUnboundedLobLocatorMaterialization() {
-		System.out.println("385");
 		return false;
 	}
 
 	@Override
 	public boolean supportsUnionAll() {
-		System.out.println("390");
 		return true;
 	}
 
 	@Override
 	public String toBooleanValueString(boolean bool) {
-		System.out.println("397");
 		return bool ? "true" : "false";
 	}
 
 	@Override
 	public boolean useInputStreamToInsertBlob() {
-		System.out.println("403");
 		return false;
 	}
 	
@@ -930,3 +912,6 @@ public String[] getDropSequenceStrings(String sequenceName) throws MappingExcept
 	
 	
 }
+
+
+	
