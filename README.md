@@ -1,10 +1,42 @@
-# hibernate-verticadialect
-# vertica-dialect
 
-## vertica versions
-vertica-dialect has been developed using the following software and versions:
-*Vertica Server 24
-*Hibernate 6.4.1
+## Vertica Dialect
+
+VerticaDialect has been developed and tested using the following software and versions:
+
+Vertica Server 24.x
+
+Hibernate 6.4.X
+
+JDK 17 or more
+
+## About The Project
+This is an example of how you may give instructions on setting up your project locally.
+To get a local copy up and running follow these simple example steps.
+
+### Prerequisites
+
+Follow instruction provided in below reference to setup environment.
+* Maven
+	https://maven.apache.org/install.html
+* Java 11
+	https://www.oracle.com/in/java/technologies/javase/jdk11-archive-downloads.html
+
+### Installation
+
+_Below is an example of how you can instruct your audience on installing and setting up your app. This template doesn't rely on any external dependencies or services._
+
+1. Clone the repo
+   ```sh
+    git clone https://github.com/vertica/vertica-geoserver-datasource.git
+   ```
+2. Build Vertica connector
+   ```sh
+    mvn clean install
+   ```
+3. Download the Vertica JDBC driver from Vertica website. (Ref: https://www.vertica.com/download/vertica/client-drivers/)
+4. Copy jar file generated in target folder and JDBC drivers to '<GEOSERVER_ROOT>/webapps/geoserver/WEB-INF/lib'.
+5. Restart GeoServer.
+
 
 
 ## supported datatypes
