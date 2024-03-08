@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "hibernate-mapping-3.0.dtd">
+    <hibernate-mapping>
+    <class name="com.vertica.model.Users" table="users_info">
+        <id name="id" type="long" column="id">
+            <generator class="native"/>
+            
+        </id>
+       
+     
+        <property name="name" type="string">
+            <column name="name" />
+        </property>
+                <property name="email" type="string">
+            <column name="email" />
+        </property>
+                 <property name="phoneNumber" type="string">
+            <column name="phoneNumber" />
+        </property>
+             
+         
+         
+        </class>
+        </hibernate-mapping> 

@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="model.Item" table="lookup_item">
+        <id name="item_nbr" type="float" column="item_nbr">
+            <generator class="increment"/>
+        </id>
+        
+        <property name="class_desc" type="string">
+            <column name="class_desc"/>
+        </property>
+
+        <property name="item_desc">
+            <column name="item_desc"/>
+        </property>
+
+        <!-- Many-to-one association with InventoryOrders -->
+        <many-to-one name="inventoryOrders" class="model.InventoryOrders" column="item_id" insert="false" update="false"/>
+    </class>
+</hibernate-mapping>

@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "hibernate-mapping-3.0.dtd">
+    <hibernate-mapping>
+    <class name="com.vertica.model.dataTypes" table="data_types_table">
+            <id name="id" type="long">
+            <column name="id" length="36" />
+            <generator class="sequence" />
+        </id>
+      <property name="binaryData" type="binary">
+            <column name="binaryData" />
+        </property>
+            <property name="varBinaryData" type="binary">
+            <column name="varBinaryData" />
+        </property>
+                    <property name="longVarBinaryData" type="binary">
+            <column name="longVarBinaryData" />
+        </property>
+     
+        <property name="booleanDatatype" type="boolean">
+            <column name="booleanDatatype" />
+        </property>
+                <property name="chardatatype" type="char">
+            <column name="chardatatype" />
+        </property>
+                 <property name="varcharDatatype" type="string">
+            <column name="varcharDatatype" />
+        </property>
+              <property name="longVarCharDataType" type="string">
+            <column name="longVarCharDataType" />
+        </property>
+         <property name="dateDataType" type="date">
+            <column name="dateDataType" />
+        </property>
+          <property name="timeDataType" type="time">
+            <column name="timeDataType" />
+        </property>
+                  <!-- <property name="timeWithTimezone" type="offsetTimeAsTimeSpan">
+            <column name="timeWithTimezone" />
+        </property> -->
+        <property name="timeWithTimeZone" type="java.time.OffsetTime">
+    <column name="timeWithTimeZone" />
+</property>
+<property name="timestampWithTimezone" type="java.time.OffsetDateTime">
+    <column name="timestampWithTimezone"/>
+</property>
+        <property name="timeStamp" type="timestamp">
+            <column name="timeStamp" />
+        </property>
+        
+    <!--     <property name="timeStampWithTimeZone" type="offsetTimeAsTimeSpan">
+            <column name="timeStampWithTimeZone" />
+        </property> -->
+          <!--  <property name="interval" type="integer">
+            <column name="interval" />
+        </property> -->
+          <property name="intervalDaytosec" type="integer">
+            <column name="intervalDaytosec" />
+        </property>
+
+           <property name="doublePrecisionField" type="double">
+            <column name="doublePrecisionField" />
+        </property>
+    <!--     <property name="floatValue" type="float">
+            <column name="floatValue" />
+        </property> -->
+            
+                <property name="integerField" type="int">
+            <column name="integerField" />
+        </property>
+               <property name="bingIntValue" type="long">
+            <column name="bingIntValue" />
+        </property>
+         <property name="smallIntValue" type="short">
+            <column name="smallIntValue" />
+        </property>
+         <property name="decimalValue" type="big_decimal">
+            <column name="decimalValue" />
+        </property>
+        </class>
+        </hibernate-mapping>

@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "hibernate-mapping-3.0.dtd">
+    <hibernate-mapping>
+    <class name="model.TimeDataType" table="time_types_table">
+               <id name="id" type="long">
+            <column name="id" length="36" />
+            <generator class="sequence" />
+        </id>
+          <property name="timeDataType" type="time">
+            <column name="timeDataType" />
+        </property>
+              <property name="timeWithTimeZone" type="java.time.OffsetTime">
+    <column name="timeWithTimeZone" />
+</property>
+<property name="timestampWithTimezone" type="java.time.OffsetDateTime">
+    <column name="timestampWithTimezone"/>
+</property>
+     <property name="name" type="string">
+    <column name="name" />
+</property>
+ </class>
+        </hibernate-mapping>
