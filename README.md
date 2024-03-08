@@ -17,10 +17,15 @@ To get a local copy up and running follow these simple example steps.
 
 Follow instruction provided in below reference to setup environment.
 * Maven
-	https://maven.apache.org/install.html
+  
+  	https://maven.apache.org/install.html
+  
 	https://mvnrepository.com/artifact/com.vertica.jdbc/vertica-jdbc/24.1.0-0
+
 	https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core/6.4.1.Final
+
 * Java 17
+  
 	https://openjdk.org/projects/jdk/17/
 
 ### Installation
@@ -28,12 +33,15 @@ Follow instruction provided in below reference to setup environment.
 Below is an example of how you can implement verticaDialect in your app.
 
 1.clone the repo
-     sh
+
    git clone https://github.com/vertica/hibernate-verticadialect.git
+   
 2.Build the Vertica Dialect
-      sh
+
     mvn clean install
+    
 3.copy jar file generated in target folder and place it in your application classpath.
+
 4.restart the application 
 
 
