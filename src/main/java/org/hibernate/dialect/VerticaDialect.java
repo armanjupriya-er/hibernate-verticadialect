@@ -65,6 +65,7 @@ import java.util.TimeZone;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.pagination.VerticaLimitHandler;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
