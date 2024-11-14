@@ -74,12 +74,18 @@ import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
@@ -125,7 +131,16 @@ public class VerticaDialect extends Dialect {
 
 
     }
-
+    @Override
+    public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+        return new StandardSqlAstTranslatorFactory() {
+            @Override
+            protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
+                    SessionFactoryImplementor sessionFactory, Statement statement) {
+                return new CustomVerticaSqlAstTranslator<>(sessionFactory, statement);
+            }
+        };
+    }
 
     @Override
     protected DatabaseVersion getMinimumSupportedVersion() {
